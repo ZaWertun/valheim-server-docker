@@ -5,9 +5,9 @@ ARG SOURCE_COMMIT
 ARG BUSYBOX_VERSION=1.34.1
 ARG SUPERVISOR_VERSION=4.2.4
 
-RUN apt-get update
-RUN apt-get -y install apt-utils
-RUN apt-get -y install build-essential curl git python3 python3-pip golang shellcheck
+RUN apt-get update \
+ && apt-get -y install apt-utils \
+ && apt-get -y install build-essential curl git python3 python3-pip golang shellcheck
 
 WORKDIR /build/busybox
 RUN curl -L -o /tmp/busybox.tar.bz2 https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2 \
@@ -23,8 +23,8 @@ RUN if [ "${TESTS:-true}" = true ]; then \
         pip3 install tox \
         && tox \
         ; \
-    fi
-RUN python3 setup.py bdist --format=gztar
+    fi \
+ && python3 setup.py bdist --format=gztar
 
 WORKDIR /build/valheim-logfilter
 COPY ./valheim-logfilter/ /build/valheim-logfilter/
@@ -42,16 +42,18 @@ RUN curl -L -o /tmp/supervisor.tar.gz https://github.com/Supervisor/supervisor/a
     && python3 setup.py bdist --format=gztar
 
 COPY bootstrap /usr/local/sbin/
-COPY valheim-status /usr/local/bin/
-COPY valheim-is-idle /usr/local/bin/
-COPY valheim-bootstrap /usr/local/bin/
-COPY valheim-backup /usr/local/bin/
-COPY valheim-updater /usr/local/bin/
-COPY valheim-plus-updater /usr/local/bin/
-COPY bepinex-updater /usr/local/bin/
-COPY valheim-server /usr/local/bin/
-COPY defaults /usr/local/etc/valheim/
-COPY common /usr/local/etc/valheim/
+COPY valheim-status \
+     valheim-is-idle \
+     valheim-bootstrap \
+     valheim-backup \
+     valheim-updater \
+     valheim-plus-updater \
+     bepinex-updater \
+     valheim-server \
+     /usr/local/bin/
+COPY defaults \
+     common \
+     /usr/local/etc/valheim/
 COPY contrib/* /usr/local/share/valheim/contrib/
 RUN chmod 755 /usr/local/sbin/bootstrap /usr/local/bin/valheim-*
 RUN if [ "${TESTS:-true}" = true ]; then \
@@ -68,14 +70,14 @@ RUN if [ "${TESTS:-true}" = true ]; then \
         ; \
     fi
 WORKDIR /
-RUN rm -rf /usr/local/lib/
-RUN tar xzvf /build/supervisor/dist/supervisor-*.linux-x86_64.tar.gz
-RUN tar xzvf /build/env2cfg/dist/env2cfg-*.linux-x86_64.tar.gz
-RUN tar xzvf /build/python-a2s/dist/python-a2s-*.linux-x86_64.tar.gz
+RUN rm -rf /usr/local/lib/ \
+ && tar xzvf /build/supervisor/dist/supervisor-*.linux-x86_64.tar.gz \
+ && tar xzvf /build/env2cfg/dist/env2cfg-*.linux-x86_64.tar.gz \
+ && tar xzvf /build/python-a2s/dist/python-a2s-*.linux-x86_64.tar.gz
 COPY supervisord.conf /usr/local/etc/supervisord.conf
 RUN mkdir -p /usr/local/etc/supervisor/conf.d/ \
-    && chmod 640 /usr/local/etc/supervisord.conf
-RUN echo "${SOURCE_COMMIT:-unknown}" > /usr/local/etc/git-commit.HEAD
+ && chmod 640 /usr/local/etc/supervisord.conf \
+ && echo "${SOURCE_COMMIT:-unknown}" > /usr/local/etc/git-commit.HEAD
 
 
 FROM debian:bullseye-slim
