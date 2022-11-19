@@ -24,7 +24,6 @@ main() {
             ensure_permissions
             verify_kernel
             verify_cpu_mhz
-            verify_memory
             verify_storage
             update
             check_server_restart
@@ -144,37 +143,6 @@ verify_cpu_mhz() {
     else
         debug "Unable to determine CPU Frequency - setting a default of 1.5 GHz so steamcmd won't complain"
         export CPU_MHZ="1500.000"
-    fi
-}
-
-
-verify_memory() {
-    local mem_info
-    local mem_total
-    local mem_min=4000000
-    mem_info=$(awk '
-        BEGIN {
-            total=0
-            free=0
-            available=0
-        }
-        {
-            if($1 ~ /^MemTotal/)
-                total=$2
-            else if($1 ~ /^MemFree/)
-                free=$2
-            else if($1 ~ /^MemAvailable/)
-                available=$2
-        }
-        END {
-            print total"/"free"/"available
-        }
-    ' /proc/meminfo)
-    debug "Memory total/free/available: $mem_info"
-    mem_total=${mem_info//\/*}
-    if [ "$mem_total" -lt $mem_min ]; then
-        mem_total=$(iec_size_format "$((mem_total*1024))")
-        error "$mem_total is not enough memory - read https://github.com/lloesche/valheim-server-docker#system-requirements"
     fi
 }
 
